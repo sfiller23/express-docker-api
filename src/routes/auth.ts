@@ -10,4 +10,6 @@ router.post("/logout", controller.logout);
 
 router.get("/me", requireAuth, controller.me);
 
+router.post("/refresh", controller.refresh);
+
 export default router;

@@ -2,7 +2,11 @@ import jwt from "jsonwebtoken";
 import { HydratedDocument } from "mongoose";
 import User from "../models/user.model";
 
-const JWT_SECRET = process.env.JWT_SECRET || "devsecret";
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "access_secret";
+const REFRESH_TOKEN_SECRET =
+  process.env.REFRESH_TOKEN_SECRET || "refresh_secret";
+const ACCESS_TOKEN_EXPIRY = "15m";
+const REFRESH_TOKEN_EXPIRY = "7d";
 const TOKEN_EXPIRE = "1d";
 
 export const register = async (email: string, password: string) => {
@@ -19,22 +23,19 @@ export const login = async (email: string, password: string) => {
   const isMatch = await user.comparePassword(password);
   if (!isMatch) throw new Error("Invalid credentials");
 
-  return generateToken(user._id.toString());
+  const accessToken = generateToken(user._id.toString());
+  const refreshToken = generateRefreshToken(user._id.toString());
+
+  return { accessToken, refreshToken };
 };
 
 const generateToken = (userId: string) => {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: TOKEN_EXPIRE });
+  return jwt.sign({ userId }, ACCESS_TOKEN_SECRET, { expiresIn: TOKEN_EXPIRE });
 };
 
 export const verifyToken = (token: string) => {
-  return jwt.verify(token, JWT_SECRET);
+  return jwt.verify(token, ACCESS_TOKEN_SECRET);
 };
-
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "access_secret";
-const REFRESH_TOKEN_SECRET =
-  process.env.REFRESH_TOKEN_SECRET || "refresh_secret";
-const ACCESS_TOKEN_EXPIRY = "15m";
-const REFRESH_TOKEN_EXPIRY = "7d";
 
 export const generateAccessToken = (userId: string) => {
   return jwt.sign({ userId }, ACCESS_TOKEN_SECRET, {
